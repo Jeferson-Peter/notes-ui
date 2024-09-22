@@ -1,6 +1,9 @@
 import axios, { AxiosError } from 'axios';
 import {jwtDecode, JwtPayload } from 'jwt-decode';
 import {api, handleApiError} from '@/services/api'
+import { parseCookies, setCookie, destroyCookie } from 'nookies';
+import {GetServerSidePropsContext, NextPageContext} from 'next';
+
 
 // URL da API (substitua pelo URL real da sua API)
 
@@ -92,42 +95,57 @@ export const refreshToken = async (): Promise<string> => {
     }
 };
 
-export const getAccessToken = (): string | null => {
-    if (typeof window !== "undefined") {
-        return localStorage.getItem('access');
-    }
-    return null;
+// Function to get access token
+export const getAccessToken = (ctx?: GetServerSidePropsContext): string | null => {
+    const cookies = parseCookies(ctx);
+    console.log("cookies: ", cookies);
+    return cookies['access'] || null;
 };
 
-export const getRefreshToken = (): string | null => {
-    if (typeof window !== "undefined") {
-        return localStorage.getItem('refresh');
-    }
-    return null;
+// Function to get refresh token
+export const getRefreshToken = (ctx?: GetServerSidePropsContext): string | null => {
+    const cookies = parseCookies(ctx);
+    return cookies['refresh'] || null;
 };
 
-export const setAccessToken = (token: string): void => {
-    localStorage.setItem('access', token);
+// Function to set access token
+export const setAccessToken = (token: string, ctx?: NextPageContext): void => {
+    setCookie(ctx, 'access', token, {
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: '/',
+        secure: true,
+        sameSite: 'Strict',
+    });
 };
 
-export const setRefreshToken = (token: string): void => {
-    localStorage.setItem('refresh', token);
+// Function to set refresh token
+export const setRefreshToken = (token: string, ctx?: NextPageContext): void => {
+    setCookie(ctx, 'refresh', token, {
+        maxAge: 30 * 24 * 60 * 60, // 30 days
+        path: '/',
+        secure: true,
+        sameSite: 'Strict',
+    });
 };
 
-export const setTokens = (access: string, refresh: string): void => {
-    setAccessToken(access);
-    setRefreshToken(refresh);
+// Function to set both tokens
+export const setTokens = (access: string, refresh: string, ctx?: NextPageContext): void => {
+    setAccessToken(access, ctx);
+    setRefreshToken(refresh, ctx);
 };
 
-export const clearTokens = (): void => {
-    localStorage.removeItem('access');
-    localStorage.removeItem('refresh');
+// Function to clear tokens
+export const clearTokens = (ctx?: NextPageContext): void => {
+    destroyCookie(ctx, 'access', { path: '/' });
+    destroyCookie(ctx, 'refresh', { path: '/' });
 };
 
+// Function to set Authorization header
 export const setAuthHeader = (token: string): void => {
     axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
 };
 
+// Function to check if token is expired
 export const isTokenExpired = (token: string): boolean => {
     const decoded = jwtDecode<JwtPayload>(token);
     if (!decoded.exp) {

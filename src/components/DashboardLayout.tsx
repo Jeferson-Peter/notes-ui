@@ -95,9 +95,12 @@ export const DashboardLayout = ({ children }: DashboardLayoutProps) => {
             <Button variant="link" onClick={() => router.push("/dashboard")}>
               Home
             </Button>
-            {/*<Button variant="link" onClick={() => router.push("/dashboard/profile")}>*/}
-            {/*  Profile*/}
-            {/*</Button>*/}
+            <Button variant="link" onClick={() => router.push("/dashboard/categories")}>
+              Categories
+            </Button>
+            <Button variant="link" onClick={() => router.push("/dashboard/tags")}>
+              Tags
+            </Button>
           </VStack>
         </Box>
 
